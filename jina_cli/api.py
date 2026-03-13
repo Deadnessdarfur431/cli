@@ -312,6 +312,66 @@ def embed(
     return data.get("data", [])
 
 
+# -- Local Embeddings (via jina-grep server) --
+
+
+LOCAL_SERVER = "http://localhost:8089"
+
+
+def local_embed(
+    texts: list[str],
+    model: str = "jina-embeddings-v5-nano",
+    task: str = "text-matching",
+) -> list[dict]:
+    """Generate embeddings via local jina-grep server on localhost:8089."""
+    body = {
+        "input": texts,
+        "model": model,
+        "task": task,
+    }
+    try:
+        with _client(timeout=120.0) as client:
+            resp = client.post(f"{LOCAL_SERVER}/v1/embeddings", json=body)
+            resp.raise_for_status()
+    except httpx.ConnectError:
+        print(
+            "Error: local embedding server not running.\n"
+            "Fix: jina-grep serve start",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    data = resp.json()
+    return data.get("data", [])
+
+
+def local_rerank(
+    query: str,
+    documents: list[str],
+    model: str = "jina-embeddings-v5-nano",
+    task: str = "text-matching",
+    top_n: int | None = None,
+) -> list[dict]:
+    """Rerank documents using local embeddings and cosine similarity."""
+    all_texts = [query] + documents
+    embeddings_data = local_embed(all_texts, model=model, task=task)
+    embeddings = [item["embedding"] for item in embeddings_data]
+
+    query_emb = embeddings[0]
+    doc_embs = embeddings[1:]
+
+    scored = []
+    for i, doc_emb in enumerate(doc_embs):
+        score = _cosine_similarity(query_emb, doc_emb)
+        scored.append({"index": i, "relevance_score": score})
+
+    scored.sort(key=lambda x: -x["relevance_score"])
+
+    if top_n is not None:
+        scored = scored[:top_n]
+
+    return scored
+
+
 # -- Reranker API --
 
 

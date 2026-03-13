@@ -12,6 +12,7 @@ Usage:
     jina pdf URL               Extract figures/tables from PDF
     jina datetime URL          Guess publish date of a URL
     jina primer                Get context info
+    jina grep PATTERN          Semantic grep (requires: pip install jina-grep)
 """
 
 import sys
@@ -93,6 +94,7 @@ def cli(ctx, api_key):
             "  jina pdf URL               Extract figures/tables from PDFs\n"
             "  jina datetime URL          Guess publish/update date of a URL\n"
             "  jina primer                Context info (time, location, network)\n"
+            "  jina grep PATTERN          Semantic grep (requires: pip install jina-grep)\n"
             "\n"
             "Run any command without arguments for usage examples.\n"
             "Run any command with --help for full options.\n"
@@ -225,16 +227,14 @@ def search(ctx, query, arxiv, ssrn, images, blog, num, tbs, location, gl, hl, as
 
 @cli.command()
 @click.argument("text", nargs=-1)
-@click.option("--model", default="jina-embeddings-v3", help="Model name (default: jina-embeddings-v3)")
-@click.option("--task", default="text-matching",
-              type=click.Choice(["retrieval.query", "retrieval.passage", "text-matching",
-                                 "classification", "separation"]),
-              help="Embedding task type")
+@click.option("--model", default=None, help="Model name (default: jina-embeddings-v3, or v5-nano with --local)")
+@click.option("--task", default=None, help="Embedding task type")
 @click.option("--dimensions", type=int, default=None, help="Output dimensions (Matryoshka)")
+@click.option("--local", is_flag=True, help="Use local MLX server (requires: jina-grep serve start)")
 @click.option("--json", "as_json", is_flag=True, help="Output as JSON")
 @click.option("--api-key", default=None, help="Jina API key")
 @click.pass_context
-def embed(ctx, text, model, task, dimensions, as_json, api_key):
+def embed(ctx, text, model, task, dimensions, local, as_json, api_key):
     """Generate embeddings for text.
 
     Input from arguments or stdin (one text per line).
@@ -245,6 +245,7 @@ def embed(ctx, text, model, task, dimensions, as_json, api_key):
         echo "hello world" | jina embed
         jina embed "text1" "text2" "text3"
         cat texts.txt | jina embed --json
+        jina embed --local "hello world"
     """
     key = api_key or ctx.obj.get("api_key")
 
@@ -258,11 +259,19 @@ def embed(ctx, text, model, task, dimensions, as_json, api_key):
             "Usage: jina embed TEXT [TEXT ...]",
             ["jina embed \"hello world\"",
              "echo \"hello\" | jina embed",
+             "jina embed --local \"hello world\"",
              "cat texts.txt | jina embed --json"],
         )
 
     try:
-        result = api.embed(texts, api_key=key, model=model, task=task, dimensions=dimensions)
+        if local:
+            _model = model or "jina-embeddings-v5-nano"
+            _task = task or "text-matching"
+            result = api.local_embed(texts, model=_model, task=_task)
+        else:
+            _model = model or "jina-embeddings-v3"
+            _task = task or "text-matching"
+            result = api.embed(texts, api_key=key, model=_model, task=_task, dimensions=dimensions)
         click.echo(utils.format_embeddings(result, as_json=as_json))
     except Exception as e:
         utils.handle_http_error(e)
@@ -274,11 +283,12 @@ def embed(ctx, text, model, task, dimensions, as_json, api_key):
 @cli.command()
 @click.argument("query")
 @click.option("-n", "--top-n", type=int, default=None, help="Max results to return")
-@click.option("--model", default="jina-reranker-v3", help="Reranker model")
+@click.option("--model", default=None, help="Reranker model (default: jina-reranker-v3, or v5-nano with --local)")
+@click.option("--local", is_flag=True, help="Use local MLX server (requires: jina-grep serve start)")
 @click.option("--json", "as_json", is_flag=True, help="Output as JSON")
 @click.option("--api-key", default=None, help="Jina API key")
 @click.pass_context
-def rerank(ctx, query, top_n, model, as_json, api_key):
+def rerank(ctx, query, top_n, model, local, as_json, api_key):
     """Rerank documents by relevance to a query.
 
     Reads documents from stdin, one per line.
@@ -288,6 +298,7 @@ def rerank(ctx, query, top_n, model, as_json, api_key):
         jina search "AI" | jina rerank "embeddings"
         cat docs.txt | jina rerank "machine learning"
         echo -e "doc1\\ndoc2\\ndoc3" | jina rerank "query" --top-n 2
+        cat docs.txt | jina rerank --local "machine learning"
     """
     key = api_key or ctx.obj.get("api_key")
     documents = utils.read_stdin_lines()
@@ -300,7 +311,12 @@ def rerank(ctx, query, top_n, model, as_json, api_key):
         sys.exit(1)
 
     try:
-        result = api.rerank(query, documents, api_key=key, model=model, top_n=top_n)
+        if local:
+            _model = model or "jina-embeddings-v5-nano"
+            result = api.local_rerank(query, documents, model=_model, top_n=top_n)
+        else:
+            _model = model or "jina-reranker-v3"
+            result = api.rerank(query, documents, api_key=key, model=_model, top_n=top_n)
         click.echo(utils.format_rerank_results(result, documents, as_json=as_json))
     except Exception as e:
         utils.handle_http_error(e)
@@ -653,6 +669,65 @@ def primer(ctx, as_json):
                 click.echo(str(data))
     except Exception as e:
         utils.handle_http_error(e)
+
+
+# -- grep --
+
+
+@cli.command(
+    context_settings=dict(
+        ignore_unknown_options=True,
+        allow_extra_args=True,
+    ),
+)
+@click.argument("args", nargs=-1, type=click.UNPROCESSED)
+@click.pass_context
+def grep(ctx, args):
+    """Semantic grep using local Jina embeddings (requires jina-grep).
+
+    Searches files semantically using natural language queries.
+    Supports most GNU grep flags plus --threshold, --top-k, --model.
+
+    \b
+    Examples:
+        jina grep "error handling" src/
+        jina grep -r --threshold 0.3 "database connection" .
+        grep -rn "error" src/ | jina grep "error handling logic"
+        jina grep serve start
+
+    \b
+    Install: pip install jina-grep
+    """
+    if not args:
+        _short_usage(
+            "Usage: jina grep PATTERN [FILES...] [OPTIONS]",
+            ['jina grep "error handling" src/',
+             'jina grep -r "database connection" .',
+             'grep -rn "error" src/ | jina grep "retry logic"',
+             'jina grep serve start    (start local embedding server)'],
+        )
+
+    try:
+        from jina_grep.cli import main as grep_main
+    except ImportError:
+        click.echo(
+            "Error: jina-grep not installed.\n"
+            "Fix: pip install jina-grep",
+            err=True,
+        )
+        sys.exit(1)
+
+    # Replace sys.argv so jina-grep's CLI sees the right args
+    import sys as _sys
+    original_argv = _sys.argv
+    _sys.argv = ["jina-grep"] + list(args)
+    try:
+        grep_main()
+    except SystemExit as e:
+        _sys.argv = original_argv
+        sys.exit(e.code if e.code is not None else 0)
+    finally:
+        _sys.argv = original_argv
 
 
 if __name__ == "__main__":
