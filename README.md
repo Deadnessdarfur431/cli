@@ -211,6 +211,19 @@ Local mode uses `jina-embeddings-v5-nano` by default. Override with `--model jin
 
 Requires `pip install jina-grep` and `jina grep serve start`.
 
+## Design principles
+
+Inspired by [CLI is All Agents Need](https://x.com/yan5xu/status/2031947154911351159):
+
+- **One tool, not twenty.** A single `run(command="jina search ...")` replaces a sprawling tool catalog. Less tool selection overhead, more problem solving.
+- **Unix pipes are the composition model.** `stdout` is data, `stderr` is diagnostics. Commands chain with `|`, `&&`, `||`. No SDK needed.
+- **Progressive `--help` for self-discovery.** Layer 0: command list. Layer 1: usage + examples. Layer 2: full options. The agent fetches only what it needs, saving context budget.
+- **Error messages that course-correct.** Every error says what went wrong and exactly how to fix it. One bad command should not cost more than one retry.
+- **`stderr` is the agent's most important channel.** When a command fails, `stderr` carries the fix. Never discard it. Never mix it with data.
+- **Consistent output format.** Same structure every time so the agent learns once, not every time. `--json` for structured, plain text for pipes.
+- **Meaningful exit codes.** `0` success, `1` user error, `2` API error, `130` interrupted. Scripts and agents branch on these, not on parsing error strings.
+- **Layer 1 is raw Unix, Layer 2 is for LLM cognition.** Pipe internals stay pure (no metadata, no truncation). Formatting and context only at the final output boundary.
+
 ## License
 
 Apache-2.0
