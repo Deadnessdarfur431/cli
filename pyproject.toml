@@ -9,7 +9,8 @@ description = "CLI for all Jina AI APIs - search, read, embed, rerank, and more"
 readme = "README.md"
 license = "Apache-2.0"
 requires-python = ">=3.10"
-keywords = ["jina", "cli", "search", "embeddings", "rerank", "ai", "api"]
+authors = [{name = "Jina AI", email = "hello@jina.ai"}]
+keywords = ["jina", "cli", "search", "embeddings", "rerank", "ai", "api", "unix", "agent", "llm-tools", "semantic-search", "web-reader"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Environment :: Console",
@@ -31,9 +32,11 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/jina-ai/cli"
+Homepage = "https://jina.ai"
+Documentation = "https://github.com/jina-ai/cli#readme"
 Repository = "https://github.com/jina-ai/cli"
 Issues = "https://github.com/jina-ai/cli/issues"
+Changelog = "https://github.com/jina-ai/cli/releases"
 
 [project.scripts]
 jina = "jina_cli.main:cli"
