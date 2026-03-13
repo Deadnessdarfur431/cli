@@ -96,7 +96,6 @@ def _request_with_retry(
                         wait = max(wait, float(retry_after))
                     except ValueError:
                         pass
-            print(f"Retrying ({attempt + 1}/{MAX_RETRIES}) after {wait:.0f}s...", file=sys.stderr)
             time.sleep(wait)
 
         except (httpx.TimeoutException, httpx.ConnectError) as exc:
@@ -104,7 +103,6 @@ def _request_with_retry(
             if attempt == MAX_RETRIES - 1:
                 raise
             wait = RETRY_BACKOFF[attempt]
-            print(f"Retrying ({attempt + 1}/{MAX_RETRIES}) after {wait:.0f}s...", file=sys.stderr)
             time.sleep(wait)
 
     raise last_exc

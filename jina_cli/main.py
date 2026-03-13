@@ -173,8 +173,6 @@ def read(ctx, url, links, images, as_json, api_key):
 
     try:
         for i, u in enumerate(urls):
-            if len(urls) > 1:
-                click.echo(f"Reading {i + 1}/{len(urls)}: {u}", err=True)
             result = api.read_url(u, api_key=key, with_links=links, with_images=images, as_json=as_json)
             if as_json:
                 click.echo(json.dumps(result, indent=2, ensure_ascii=False) if isinstance(result, dict) else result)
