@@ -147,33 +147,76 @@ def format_pdf_results(data: dict, as_json: bool = False) -> str:
 
 
 def handle_http_error(e: Exception) -> None:
-    """Handle HTTP errors with helpful messages."""
+    """Handle HTTP errors with actionable guidance.
+
+    Every error message must tell the user exactly what to do next.
+    """
     import httpx
 
     if isinstance(e, httpx.HTTPStatusError):
         status = e.response.status_code
+        try:
+            body = e.response.text[:500]
+        except Exception:
+            body = ""
+
         if status == 401:
             print(
-                "Error: Authentication failed. Check your API key.\n"
-                "Get a key at https://jina.ai/?sui=apikey",
+                "Error: invalid or expired API key.\n"
+                "Fix: export JINA_API_KEY=your-key\n"
+                "     Or pass --api-key your-key\n"
+                "Get a free key: https://jina.ai/?sui=apikey",
                 file=sys.stderr,
             )
         elif status == 402:
             print(
-                "Error: Out of quota. Top up at https://jina.ai",
+                "Error: API quota exhausted.\n"
+                "Fix: top up credits at https://jina.ai/api-dashboard/billing\n"
+                "     Or check usage at https://jina.ai/api-dashboard",
+                file=sys.stderr,
+            )
+        elif status == 422:
+            print(
+                f"Error: invalid request parameters.\n"
+                f"Server said: {body}\n"
+                f"Fix: check your arguments with --help",
                 file=sys.stderr,
             )
         elif status == 429:
             print(
-                "Error: Rate limit exceeded. Try again later or upgrade at https://jina.ai",
+                "Error: rate limit hit.\n"
+                "Fix: wait a few seconds and retry\n"
+                "     Or add an API key for higher limits: export JINA_API_KEY=your-key\n"
+                "     Get a key: https://jina.ai/?sui=apikey",
+                file=sys.stderr,
+            )
+        elif status >= 500:
+            print(
+                f"Error: Jina API server error (HTTP {status}).\n"
+                f"Server said: {body}\n"
+                f"Fix: retry in a moment. If persistent, check https://status.jina.ai",
                 file=sys.stderr,
             )
         else:
-            try:
-                body = e.response.text
-            except Exception:
-                body = ""
-            print(f"Error: HTTP {status}: {body}", file=sys.stderr)
+            print(
+                f"Error: HTTP {status}.\n"
+                f"Server said: {body}\n"
+                f"Fix: check your arguments with --help",
+                file=sys.stderr,
+            )
+    elif isinstance(e, httpx.ConnectError):
+        print(
+            "Error: cannot connect to Jina API.\n"
+            "Fix: check your internet connection\n"
+            "     Jina API status: https://status.jina.ai",
+            file=sys.stderr,
+        )
+    elif isinstance(e, httpx.TimeoutException):
+        print(
+            "Error: request timed out.\n"
+            "Fix: retry the command. For large inputs, try smaller batches",
+            file=sys.stderr,
+        )
     else:
         print(f"Error: {e}", file=sys.stderr)
     sys.exit(1)

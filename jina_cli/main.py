@@ -260,8 +260,10 @@ def rerank(ctx, query, top_n, model, as_json, api_key):
     documents = utils.read_stdin_lines()
 
     if not documents:
-        click.echo("Error: no documents on stdin. Pipe text to rerank.", err=True)
-        click.echo("Example: cat docs.txt | jina rerank \"your query\"", err=True)
+        click.echo("Error: no documents on stdin.\n"
+                   "Fix: pipe text lines to rerank, one document per line.\n"
+                   "  cat docs.txt | jina rerank \"your query\"\n"
+                   "  jina search \"AI\" | jina rerank \"embeddings\"", err=True)
         sys.exit(1)
 
     try:
@@ -293,8 +295,10 @@ def dedup(ctx, k, as_json, api_key):
     lines = utils.read_stdin_lines()
 
     if not lines:
-        click.echo("Error: no input on stdin. Pipe text to deduplicate.", err=True)
-        click.echo("Example: cat items.txt | jina dedup", err=True)
+        click.echo("Error: no input on stdin.\n"
+                   "Fix: pipe text lines to deduplicate, one item per line.\n"
+                   "  cat items.txt | jina dedup\n"
+                   "  jina search \"AI\" | jina dedup -k 5", err=True)
         sys.exit(1)
 
     try:

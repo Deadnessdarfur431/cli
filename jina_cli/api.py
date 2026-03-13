@@ -24,8 +24,10 @@ def require_api_key(api_key: str | None = None) -> str:
     key = get_api_key(api_key)
     if not key:
         print(
-            "Error: API key required. Set JINA_API_KEY env var or pass --api-key.\n"
-            "Get your key at https://jina.ai/?sui=apikey",
+            "Error: API key required.\n"
+            "Fix: export JINA_API_KEY=your-key\n"
+            "     Or pass --api-key your-key\n"
+            "Get a free key: https://jina.ai/?sui=apikey",
             file=sys.stderr,
         )
         sys.exit(1)
